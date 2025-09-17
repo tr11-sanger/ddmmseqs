@@ -4,4 +4,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - numpy
+  - bioconda::diamond=2.1.12
+  - python
