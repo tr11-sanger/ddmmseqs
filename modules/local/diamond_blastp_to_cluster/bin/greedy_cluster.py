@@ -84,7 +84,7 @@ with gzip.open(args.out_clusters, 'wt') as f:
 # write cluster sequences
 os.makedirs(args.out_cluster_seqs_dir, exist_ok=True)
 cluster_files = {k: gzip.open(f"{args.out_cluster_seqs_dir}/{k}.faa.gz", 'wt')
-                 for k in cluster2nodes.items()}
+                 for k,_ in cluster2nodes.items()}
 
 with open(args.filelist, 'rt') as f_list:
     for l in f:
