@@ -1,6 +1,6 @@
 {
-  "name": "nf-core/genomeannotation",
-  "homePage": "https://github.com/nf-core/genomeannotation",
+  "name": "nf-core/ddmmseqs",
+  "homePage": "https://github.com/nf-core/ddmmseqs",
   "repos": {
     "https://github.com/nf-core/modules.git": {
       "modules": {
