@@ -15,7 +15,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { GENOMEANNOTATION  } from './workflows/genomeannotation'
+include { DDMMSEQS  } from './workflows/ddmmseqs'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,7 +28,7 @@ workflow {
     //
     // WORKFLOW: Run pipeline
     //
-    GENOMEANNOTATION ()
+    DDMMSEQS ()
 }
 
 /*

@@ -7,18 +7,16 @@
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "name": {
                 "type": "string",
-                "pattern": "^\\S+$",
                 "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "minLength": 3
+                "minLength": 1
             },
-            "fastx": {
+            "filelist": {
                 "type": "string",
-                "pattern": "^\\S+\\.f(ast)?[aq](\\.gz)?$",
-                "errorMessage": "FASTA/FASTQ file for reads must be provided, cannot contain spaces and must have extension '.fq', '.fastq', '.fa' or '.fasta' with optional '.gz' afterwards."
+                "errorMessage": "Path for file containing newline-seperated list of faa files must be provided."
             }
         },
-        "required": ["sample", "fastx"]
+        "required": ["name", "filelist"]
     }
 }
