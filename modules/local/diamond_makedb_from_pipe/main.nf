@@ -2,7 +2,6 @@ process DIAMOND_MAKEDB_FROM_PIPE {
     tag "${meta.id}"
     label 'process_medium'
 
-    conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
         ? 'https://depot.galaxyproject.org/singularity/diamond:2.1.12--hdb4b4cc_1'
         : 'biocontainers/diamond:2.1.12--hdb4b4cc_1'}"
@@ -24,13 +23,14 @@ process DIAMOND_MAKEDB_FROM_PIPE {
     // def fasta_name = is_compressed ? fasta.getBaseName() : fasta
 
     """
-    while read fp; do
-        if [[ \$fp =~ /.gz\$ ]]; then
+    cat ${filelist} \\
+    | while read fp; do
+        if [[ \$fp =~ \\.gz\$ ]]; then
             gunzip -c \$fp
         else
             cat \$fp
         fi
-    done < ${filelist} \\
+    done \\
     | diamond makedb \\
         --threads ${task.cpus} \\
         -d ${prefix} \\
