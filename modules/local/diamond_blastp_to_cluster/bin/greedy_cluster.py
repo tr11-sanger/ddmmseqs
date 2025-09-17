@@ -50,13 +50,13 @@ with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, '
         target_length, target_start, target_end, \
         n_matching, n_bases, mapping_quality = [v.strip() for v in line.split()]
 
-        seq_identity = float(n_matching)/float(n_bases)
-        cov = min([
-            (float(query_end)-float(query_start))/float(query_length), 
-            (float(target_end)-float(target_start))/float(target_length)
-        ])
-        if (seq_identity < args.min_seq_identity) or (cov < args.min_cov):
-            continue
+        # seq_identity = float(n_matching)/float(n_bases)
+        # cov = min([
+        #     (float(query_end)-float(query_start))/float(query_length), 
+        #     (float(target_end)-float(target_start))/float(target_length)
+        # ])
+        # if (seq_identity < args.min_seq_identity) or (cov < args.min_cov):
+        #     continue
 
         node1, node2 = query_name, target_name
 
