@@ -2,7 +2,7 @@
 
 ## Description
 
-<u>**D**</u>IAMOND-<u>**d**</u>ivide followed by <u>**mmseqs**</u>-linclust to cluster very large (>1B) protein sequence collections.
+<ins>**D**</ins>IAMOND-<ins>**d**</ins>ivide followed by <ins>**mmseqs**</ins>-linclust to cluster very large (>1B) protein sequence collections.
 
 Uses a divide-and-conquer strategy to make clustering tractable. Relies on nature of the proteins being such that they will naturally split into distinct groups without any in-between sequences linking them, otherwise greedy clustering will just produce one big blob cluster.
 * ensure that alignment coverage threshold is fairly high (>0.8) and this should be a valid assumption
