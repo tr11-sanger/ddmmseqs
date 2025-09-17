@@ -1,10 +1,10 @@
-import fileinput
+import sys
 import os
 from collections import defaultdict
 import gzip
 import argparse
 
-parser = argparse.ArgumentParser(description='Parse domain table output from HMMer (`hmmsearch`) to calculate HMM model coverages from metagenomic reads.')
+parser = argparse.ArgumentParser(description='Single linkage cluster based on pipe of PAF.')
 parser.add_argument('-f', "--filelist", type=str,
                     help="Path to file containing list of .faa or .faa.gz files.")
 parser.add_argument('-n', "--out_nodes", type=str,
@@ -40,7 +40,7 @@ cluster2nodes = defaultdict(set)
 node2cluster = {}
 node_index = {}
 with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, 'wt') as out_linkage:
-    for line in fileinput.input():
+    for line in sys.stdin.readlines():
         line_ = [v.strip() for v in line.split()]
         node1, node2 = line_[:2]
 
