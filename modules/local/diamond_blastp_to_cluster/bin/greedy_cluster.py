@@ -45,11 +45,14 @@ node2cluster = {}
 node_index = {}
 with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, 'wt') as out_linkage:
     for line in sys.stdin.readlines():
+        line_ = [v.strip() for v in line.split()]
+        if not len(line_)==15:
+            continue
         query_name, query_length, query_start, \
         query_end, strand, target_name, \
         target_length, target_start, target_end, \
         n_matching, n_bases, mapping_quality, \
-        bit_score, raw_score, evalue = [v.strip() for v in line.split()]
+        bit_score, raw_score, evalue = line_
 
         node1, node2 = query_name, target_name
 
