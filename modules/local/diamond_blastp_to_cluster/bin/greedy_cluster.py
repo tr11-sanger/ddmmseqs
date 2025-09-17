@@ -87,7 +87,7 @@ cluster_files = {k: gzip.open(f"{args.out_cluster_seqs_dir}/{k}.faa.gz", 'wt')
                  for k,_ in cluster2nodes.items()}
 
 with open(args.filelist, 'rt') as f_list:
-    for l in f:
+    for l in f_list:
         fp = l.strip()
         file_opener = gzip.open if fp.endswith('.gz') else open
 
