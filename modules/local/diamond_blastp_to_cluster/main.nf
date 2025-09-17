@@ -12,7 +12,7 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     val save_paf
 
     output:
-    tuple val(meta), path('*_nodes.{txt,txt.gz}'), emit: nodes
+    tuple val(meta), path('*_nodes.{tsv,tsv.gz}'), emit: nodes
     tuple val(meta), path('*_linkage.{tsv,tsv.gz}'), emit: linkage
     tuple val(meta), path('*_clusters.{tsv,tsv.gz}'), emit: clusters
     tuple val(meta), path('*_cluster_seqs/*.{faa,faa.gz}'), emit: cluster_seqs
@@ -47,8 +47,9 @@ process DIAMOND_BLASTP_TO_CLUSTER {
         --db ${db} \\
         --outfmt ${outfmt} ${columns} \\
         ${args} \\
-    ${tee_cmd} | ${moduleDir}/bin/greedy_cluster.py \\
-        --out_nodes ${prefix}_nodes.txt.gz \\
+    ${tee_cmd} | python ${moduleDir}/bin/greedy_cluster.py \\
+        --filelist ${filelist} \\
+        --out_nodes ${prefix}_nodes.tsv.gz \\
         --out_linkage ${prefix}_linkage.tsv.gz \\
         --out_clusters ${prefix}_clusters.tsv.gz \\
         --out_cluster_seqs_dir ${prefix}_cluster_seqs
@@ -68,7 +69,7 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     touch ${prefix}_linkage.tsv.gz
     touch ${prefix}_clusters.tsv.gz
     mkdir ${prefix}_cluster_seqs
-    touch ${prefix}_cluster_seqs/1.faa
+    touch ${prefix}_cluster_seqs/1.faa.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
