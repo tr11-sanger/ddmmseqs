@@ -86,7 +86,7 @@ with gzip.open(args.out_clusters, 'wt') as f:
 # write cluster sequences
 
 # first merge clusters up to target size
-if args.target_cluster_size<1:
+if args.target_cluster_size>0:
     group2clusters = defaultdict(set)
     cluster2group = {}
 
