@@ -34,7 +34,7 @@ process DIAMOND_MAKEDB_FROM_PIPE {
     | diamond makedb \\
         --threads ${task.cpus} \\
         -d ${prefix} \\
-        ${args} \\
+        ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

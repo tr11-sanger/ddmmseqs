@@ -24,7 +24,7 @@ workflow DDMMSEQS {
         name, filelist ->
         [
             ['id': name],
-            filelist,
+            file(filelist),
         ]
     }
 
