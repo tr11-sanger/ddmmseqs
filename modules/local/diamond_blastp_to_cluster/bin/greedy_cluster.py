@@ -2,6 +2,7 @@ import sys
 import os
 from collections import defaultdict
 import gzip
+import itertools as it
 import argparse
 
 parser = argparse.ArgumentParser(description='Single linkage cluster based on pipe of PAF.')
@@ -15,6 +16,7 @@ parser.add_argument('-c', "--out_clusters", type=str,
                     help="Output clusters file.")
 parser.add_argument('-s', "--out_cluster_seqs_dir", type=str,
                     help="Output directory of cluster faa files.")
+parser.add_argument('-t', "--target_cluster_size", type=int, default=-1, help="Target number of members of a cluster for output files.")
 
 args = parser.parse_args()
 
@@ -82,9 +84,46 @@ with gzip.open(args.out_clusters, 'wt') as f:
 
 
 # write cluster sequences
+
+# first merge clusters up to target size
+if args.target_cluster_size<1:
+    group2clusters = defaultdict(set)
+    cluster2group = {}
+
+    cluster_sizes = {k:len(vs) for k,vs in cluster2nodes.items()}
+    sorted_cluster_sizes = list(sorted(cluster_sizes.items(), key=lambda x:-x[1]))
+    for k1,_ in sorted_cluster_sizes:
+        if k1 in cluster2group:
+            continue
+
+        cluster2group[k1] = len(group2clusters)
+        group2clusters[cluster2group[k1]] = {k1}
+
+        group_size = sum([cluster_sizes[v] for v in group2clusters[cluster2group[k1]]])
+        if group_size>=args.target_cluster_size:
+            continue
+
+        for k2,s in sorted_cluster_sizes:
+            if k2 in cluster2group:
+                continue
+
+            if group_size+s <= args.target_cluster_size:
+                cluster2group[k2] = cluster2group[k1]
+                group2clusters[cluster2group[k1]].add(k2)
+                group_size += s
+else:
+    group2clusters = {i:{k} for i,k in enumerate(cluster2nodes)}
+    cluster2group = {v:k for k,vs in group2clusters.items() for v in vs}
+
+
+node2group = {k:cluster2group[v] for k,v in node2cluster.items()}
+group2nodes = defaultdict(set)
+for k,v in node2group.items():
+    group2nodes[v].add(k)
+
 os.makedirs(args.out_cluster_seqs_dir, exist_ok=True)
 cluster_files = {k: gzip.open(f"{args.out_cluster_seqs_dir}/{k}.faa.gz", 'wt')
-                 for k,_ in cluster2nodes.items()}
+                 for k,_ in group2nodes.items()}
 
 with open(args.filelist, 'rt') as f_list:
     for l in f_list:
@@ -94,7 +133,7 @@ with open(args.filelist, 'rt') as f_list:
         with file_opener(fp, 'rt') as f_faa:
             for header, seq in parse_faa(l.strip() for l in f_faa.readlines()):
                 node_idx = node_index[header]
-                cluster_idx = node2cluster[node_idx]
+                cluster_idx = node2group[node_idx]
                 cluster_files[cluster_idx].write(f">{header}\n{seq}\n\n")
 
 for k,f in cluster_files.items():

@@ -30,7 +30,7 @@ workflow DDMMSEQS {
 
     DIAMOND_MAKEDB_FROM_PIPE(filelist_ch)
     diamond_db_ch = DIAMOND_MAKEDB_FROM_PIPE.out.db
-    DIAMOND_BLASTP_TO_CLUSTER(filelist_ch.join(diamond_db_ch), true)
+    DIAMOND_BLASTP_TO_CLUSTER(filelist_ch.join(diamond_db_ch), true, params.target_cluster_size)
 
     emit:
     versions = ch_versions                 // channel: [ path(versions.yml) ]
