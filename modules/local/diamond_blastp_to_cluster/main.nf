@@ -8,7 +8,7 @@ process DIAMOND_BLASTP_TO_CLUSTER {
         : 'biocontainers/diamond:2.1.12--hdb4b4cc_1'}"
 
     input:
-    tuple val(meta), path(db)
+    tuple val(meta), path(filelist), path(db)
     val save_paf
 
     output:
@@ -33,11 +33,18 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     def tee_cmd = save_paf ? "| tee ${prefix}.paf" : ''
 
     """
-    diamond \\
+    cat ${filelist} \\
+    | while read fp; do
+        if [[ \$fp =~ \\.gz\$ ]]; then
+            gunzip -c \$fp
+        else
+            cat \$fp
+        fi
+    done \\
+    | diamond \\
         blastp \\
         --threads ${task.cpus} \\
         --db ${db} \\
-        --query ${db} \\
         --outfmt ${outfmt} ${columns} \\
         ${args} \\
     ${tee_cmd} | ${moduleDir}/bin/greedy_cluster.py \\

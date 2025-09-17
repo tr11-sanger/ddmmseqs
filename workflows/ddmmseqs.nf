@@ -20,7 +20,7 @@ workflow DDMMSEQS {
     // Parse samplesheet and fetch reads
     manifest = Channel.fromList(samplesheetToList(params.samplesheet, "${workflow.projectDir}/assets/schema_input.json"))
 
-    manifest_ch = manifest.map {
+    filelist_ch = manifest.map {
         name, filelist ->
         [
             ['id': name],
@@ -28,9 +28,9 @@ workflow DDMMSEQS {
         ]
     }
 
-    DIAMOND_MAKEDB_FROM_PIPE(manifest_ch)
+    DIAMOND_MAKEDB_FROM_PIPE(filelist_ch)
     diamond_db_ch = DIAMOND_MAKEDB_FROM_PIPE.out.db
-    DIAMOND_BLASTP_TO_CLUSTER(diamond_db_ch, false)
+    DIAMOND_BLASTP_TO_CLUSTER(filelist_ch.join(diamond_db_ch), true)
 
     emit:
     versions = ch_versions                 // channel: [ path(versions.yml) ]
