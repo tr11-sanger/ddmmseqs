@@ -11,8 +11,6 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     tuple val(meta), path(filelist), path(db)
     val save_paf
     val target_cluster_size
-    val min_seq_identity
-    val min_cov
 
     output:
     tuple val(meta), path('*_nodes.{tsv,tsv.gz}'), emit: nodes
@@ -57,8 +55,6 @@ process DIAMOND_BLASTP_TO_CLUSTER {
         --out_clusters ${prefix}_clusters.tsv.gz \\
         --out_cluster_seqs_dir ${prefix}_cluster_seqs \\
         --target_cluster_size ${target_cluster_size} \\
-        --min_seq_identity ${min_seq_identity} \\
-        --min_cov ${min_cov} \\
         ${args2}
 
     cat <<-END_VERSIONS > versions.yml

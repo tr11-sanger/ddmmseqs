@@ -34,8 +34,6 @@ workflow DDMMSEQS {
         filelist_ch.join(diamond_db_ch), 
         true, 
         params.target_cluster_size,
-        params.diamond_min_seq_identity,
-        params.diamond_min_cov
     )
 
     emit:

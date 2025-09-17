@@ -17,8 +17,8 @@ parser.add_argument('-c', "--out_clusters", type=str,
 parser.add_argument('-s', "--out_cluster_seqs_dir", type=str,
                     help="Output directory of cluster faa files.")
 parser.add_argument('-t', "--target_cluster_size", type=int, default=-1, help="Target number of members of a cluster for output files.")
-parser.add_argument('-i', "--min_seq_identity", type=int, default=0.7, help="Minimum sequence identity")
-parser.add_argument('-m', "--min_cov", type=int, default=0.8, help="Minimum coverage")
+parser.add_argument('-i', "--min_seq_identity", type=float, default=0.7, help="Minimum sequence identity")
+parser.add_argument('-m', "--min_cov", type=float, default=0.8, help="Minimum coverage")
 
 args = parser.parse_args()
 
@@ -49,14 +49,6 @@ with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, '
         query_end, strand, target_name, \
         target_length, target_start, target_end, \
         n_matching, n_bases, mapping_quality = [v.strip() for v in line.split()]
-
-        # seq_identity = float(n_matching)/float(n_bases)
-        # cov = min([
-        #     (float(query_end)-float(query_start))/float(query_length), 
-        #     (float(target_end)-float(target_start))/float(target_length)
-        # ])
-        # if (seq_identity < args.min_seq_identity) or (cov < args.min_cov):
-        #     continue
 
         node1, node2 = query_name, target_name
 
@@ -97,8 +89,6 @@ with gzip.open(args.out_clusters, 'wt') as f:
         f.write(f"{k}\t{v}\n")
 
 
-# write cluster sequences
-
 # first merge clusters up to target size
 if args.target_cluster_size>0:
     group2clusters = defaultdict(set)
@@ -130,6 +120,7 @@ else:
     cluster2group = {v:k for k,vs in group2clusters.items() for v in vs}
 
 
+# write cluster sequences
 node2group = {k:cluster2group[v] for k,v in node2cluster.items()}
 group2nodes = defaultdict(set)
 for k,v in node2group.items():
