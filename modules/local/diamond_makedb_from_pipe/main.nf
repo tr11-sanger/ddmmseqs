@@ -25,7 +25,7 @@ process DIAMOND_MAKEDB_FROM_PIPE {
 
     """
     while read fp; do
-        if [[ \$fp =~ /.gz$ ]]; then
+        if [[ \$fp =~ /.gz\$ ]]; then
             gunzip -c \$fp
         else
             cat \$fp
