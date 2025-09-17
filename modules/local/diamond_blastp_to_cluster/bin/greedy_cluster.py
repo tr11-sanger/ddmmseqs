@@ -43,6 +43,8 @@ def parse_faa(lines):
 cluster2nodes = defaultdict(set)
 node2cluster = {}
 node_index = {}
+next_cluster_idx = 0
+next_node_idx = 0
 with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, 'wt') as out_linkage:
     for line in sys.stdin.readlines():
         line_ = [v.strip() for v in line.split()]
@@ -59,25 +61,24 @@ with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, '
         # add node to index and to clusters
         for node in [node1, node2]:
             if not node in node_index:
-                node_index[node] = len(node_index)
+                node_index[node] = next_node_idx
+                next_node_idx += 1
                 out_nodes.write(f"{node}\t{node_index[node]}\n")
 
-            if not node in node2cluster:
-                cluster_idx = node_index[node]
+            if not node_index[node] in node2cluster:
+                cluster_idx = next_cluster_idx
                 node2cluster[node_index[node]] = cluster_idx
                 cluster2nodes[cluster_idx] = {node_index[node]}
+                next_cluster_idx += 1
         
         # add linkage to file
         out_linkage.write(f"{node_index[node1]}\t{node_index[node2]}\n")
 
         # create/merge clusters
-        node1_idx, node2_idx = node_index[node1], node_index[node2] 
-        if node2cluster[node1_idx] == node2cluster[node2_idx]:
+        keep_cluster_idx, delete_cluster_idx = node2cluster[node_index[node1]], node2cluster[node_index[node2]]
+        if keep_cluster_idx == delete_cluster_idx:
             continue
-
-        keep_cluster_idx = node1_idx
-        delete_cluster_idx = node2_idx
-        if node1_idx > node2_idx:
+        if keep_cluster_idx > delete_cluster_idx:
             keep_cluster_idx, delete_cluster_idx = delete_cluster_idx, keep_cluster_idx
         
         cluster2nodes[keep_cluster_idx].update(cluster2nodes[delete_cluster_idx])
