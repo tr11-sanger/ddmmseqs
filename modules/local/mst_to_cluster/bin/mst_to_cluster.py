@@ -42,12 +42,12 @@ master_node_index = {}
 next_cluster_idx = 0
 next_node_idx = 0
 line_i = 0
-with gzip.open(args.linkagelists, 'rt') as linkagelist_f, gzip.open(args.out_nodes, 'wt') as out_nodes:
+with open(args.linkagelists, 'rt') as linkagelist_f, gzip.open(args.out_nodes, 'wt') as out_nodes:
     for linkagelist_l in linkagelist_f:
         node_fp, linkage_fp = [v.strip() for v in linkagelist_l.split()]
 
         node_index = {}
-        with open(node_fp, 'rt') as node_f:
+        with gzip.open(node_fp, 'rt') as node_f:
             for node_l in node_f:
                 k, v = [v.strip() for v in node_l.split()]
                 node_index[k] = int(v)
@@ -64,7 +64,7 @@ with gzip.open(args.linkagelists, 'rt') as linkagelist_f, gzip.open(args.out_nod
                 cluster2nodes[cluster_idx] = {master_node_index[k]}
                 next_cluster_idx += 1
 
-        with open(linkage_fp, 'rt') as linkage_f:
+        with gzip.open(linkage_fp, 'rt') as linkage_f:
             for linkage_l in linkage_f:
                 line_i += 1
                 if line_i % 1_000_000:

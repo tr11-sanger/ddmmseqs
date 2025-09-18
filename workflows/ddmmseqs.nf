@@ -68,7 +68,7 @@ workflow DDMMSEQS {
             def n = vs.size() 
             return [k, vs.collect{meta, filelist, db -> [meta + ['n_perm': n], filelist, db]}] }
         .transpose()
-        .map { k, v -> v }
+        .map { _k, v -> v }
     diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
 
     DIAMOND_BLASTP_TO_MST(
@@ -77,13 +77,18 @@ workflow DDMMSEQS {
     )
     cluster_ch = DIAMOND_BLASTP_TO_MST.out.nodes
         .join( DIAMOND_BLASTP_TO_MST.out.linkage )
-        .join( diamond_blastp_ch.map { meta, filelist, _db -> [meta, filelist] } )
-        .map { meta, nodes, linkage, filelist -> [groupKey(['id': meta.collection_id], meta.n_perm), [nodes, linkage, filelist]] }
+        .map { meta, nodes, linkage  -> [groupKey(['id': meta.collection_id], meta.n_perm), [nodes, linkage]] }
         .groupTuple()
         .map { meta, vs -> 
-            def (nodes, linkages, filelists) = vs.transpose()
-            return [meta, [nodes, linkages].transpose(), filelists]
+            return [['id': meta.collection_id], vs]
         }
+        .join( 
+            faa_chunks_ch
+                .map { meta, filelist -> 
+                    [groupKey(['id': meta.collection_id], meta.n_chunks), filelist] 
+                }
+                .groupTuple() 
+        )
     cluster_ch.view{ "cluster_ch - ${it}" }
     MST_TO_CLUSTER(cluster_ch, params.target_cluster_size)
 
