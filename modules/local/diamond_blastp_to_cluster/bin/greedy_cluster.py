@@ -48,8 +48,24 @@ next_node_idx = 0
 with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, 'wt') as out_linkage:
     for line in sys.stdin.readlines():
         line_ = [v.strip() for v in line.split()]
-        if not len(line_)==15:
+
+        # self-match lines are truncated        
+        if len(line_)==11:
+            node  = line_[0]
+
+            if not node in node_index:
+                node_index[node] = next_node_idx
+                next_node_idx += 1
+                out_nodes.write(f"{node}\t{node_index[node]}\n")
+
+            if not node_index[node] in node2cluster:
+                cluster_idx = next_cluster_idx
+                node2cluster[node_index[node]] = cluster_idx
+                cluster2nodes[cluster_idx] = {node_index[node]}
+                next_cluster_idx += 1
+
             continue
+
         query_name, query_length, query_start, \
         query_end, strand, target_name, \
         target_length, target_start, target_end, \
