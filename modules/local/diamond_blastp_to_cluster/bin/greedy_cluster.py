@@ -2,7 +2,7 @@ import sys
 import os
 from collections import defaultdict
 import gzip
-import itertools as it
+import datetime
 import argparse
 
 parser = argparse.ArgumentParser(description='Single linkage cluster based on pipe of PAF.')
@@ -45,8 +45,13 @@ node2cluster = {}
 node_index = {}
 next_cluster_idx = 0
 next_node_idx = 0
+line_i = 0
 with gzip.open(args.out_nodes, 'wt') as out_nodes, gzip.open(args.out_linkage, 'wt') as out_linkage:
     for line in sys.stdin.readlines():
+        line_i += 1
+        if line_i % 1_000_000:
+            print(f"{datetime.datetime.now()}\t{line_i:,} lines read")
+
         line_ = [v.strip() for v in line.split()]
 
         # self-match lines are truncated        
@@ -151,6 +156,7 @@ os.makedirs(args.out_cluster_seqs_dir, exist_ok=True)
 cluster_files = {k: gzip.open(f"{args.out_cluster_seqs_dir}/{k}.faa.gz", 'wt')
                  for k,_ in group2nodes.items()}
 
+seq_i = 0
 with open(args.filelist, 'rt') as f_list:
     for l in f_list:
         fp = l.strip()
@@ -158,6 +164,9 @@ with open(args.filelist, 'rt') as f_list:
 
         with file_opener(fp, 'rt') as f_faa:
             for header, seq in parse_faa(l.strip() for l in f_faa.readlines()):
+                seq_i += 1
+                if seq_i % 1_000_000:
+                    print(f"{datetime.datetime.now()}\t{seq_i:,} seqs written")
                 node_idx = node_index[header]
                 cluster_idx = node2group[node_idx]
                 cluster_files[cluster_idx].write(f">{header}\n{seq}\n\n")
