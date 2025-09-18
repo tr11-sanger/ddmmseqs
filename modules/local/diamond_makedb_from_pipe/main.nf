@@ -19,8 +19,6 @@ process DIAMOND_MAKEDB_FROM_PIPE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // def is_compressed = fasta.getExtension() == "gz" ? true : false
-    // def fasta_name = is_compressed ? fasta.getBaseName() : fasta
 
     """
     cat ${filelist} \\

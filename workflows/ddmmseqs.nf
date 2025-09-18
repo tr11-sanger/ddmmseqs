@@ -41,9 +41,9 @@ workflow DDMMSEQS {
         .groupTuple()
         .map { k, vs ->
             def n = vs.size() 
-            return [k, vs.collect{meta, filelist -> [[meta + ['n_chunks': n], filelist]]}] }
+            return [k, vs.collect{meta, filelist -> [meta + ['n_chunks': n], filelist]}] }
         .transpose()
-        .map { k, v -> 
+        .map { _k, v -> 
             def (meta, filelist) = v 
             return [meta, filelist]
         }
