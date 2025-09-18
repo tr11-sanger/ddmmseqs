@@ -103,7 +103,7 @@ workflow DDMMSEQS {
             db: [meta, db]
             db_cluster: [meta, db_cluster]
         }
-    joined_db_clustered_db_ch.view{ "joined_db_clustered_db_ch - ${it}" }
+    joined_db_clustered_db_ch.db_cluster.view{ "joined_db_clustered_db_ch.db_cluster - ${it}" }
     MMSEQS_CREATETSV(
         joined_db_clustered_db_ch.db_cluster,
         joined_db_clustered_db_ch.db,
