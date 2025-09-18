@@ -42,7 +42,7 @@ workflow DDMMSEQS {
     )
     def idx = 0
     seq_chunks_ch = DIAMOND_BLASTP_TO_CLUSTER.out.cluster_seqs
-        .map{ meta, seqs -> 
+        .map { meta, seqs -> 
             [meta + ['n_seqs': seqs.size()], seqs] 
         }
         .transpose()
@@ -57,7 +57,7 @@ workflow DDMMSEQS {
     MMSEQS_LINCLUST(MMSEQS_CREATEDB.out.db)
     joined_db_clustered_db_ch = MMSEQS_CREATEDB.out.db
         .join(MMSEQS_LINCLUST.out.db_cluster)
-        .multiMap{ meta, db, db_cluster -> 
+        .multiMap { meta, db, db_cluster -> 
             db: [meta, db]
             db_cluster: [meta, db_cluster]
         }
@@ -69,10 +69,12 @@ workflow DDMMSEQS {
 
     // concatentate results
     tsv_concat_ch = MMSEQS_CREATETSV.out.tsv
-        .map{ meta, tsv -> [groupKey(meta.remove('idx'), meta.n_seqs), tsv] }
+        .map { meta, tsv -> 
+            meta.remove('idx')
+            [groupKey(meta, meta.n_seqs), tsv] 
+        }
         .groupTuple()
-        .map{ meta, tsvs ->
-            [meta, meta.id, tsvs]}
+        .map { meta, tsvs -> [meta, meta.id, tsvs] }
     CONCATENATE(tsv_concat_ch)
 
     emit:
