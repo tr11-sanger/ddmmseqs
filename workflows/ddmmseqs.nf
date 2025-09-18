@@ -41,8 +41,16 @@ workflow DDMMSEQS {
         params.target_cluster_size,
     )
     seq_chunks_ch = DIAMOND_BLASTP_TO_CLUSTER.out.cluster_seqs
-        .map{ meta, seqs -> [meta + ['n_seqs': seqs.size()], seqs] }
+        .map{ meta, seqs -> 
+            [meta + ['n_seqs': seqs.size()], seqs] 
+        }
         .transpose()
+    seq_chunks_ch = seq_chunks_ch
+        .mix(channel.of(1..seq_chunks_ch.count()))
+        .map{
+            meta, seq, idx ->
+            [meta + ['idx': idx], seq]
+        }
 
     // clustering of chunks
     MMSEQS_CREATEDB(seq_chunks_ch)
@@ -61,9 +69,11 @@ workflow DDMMSEQS {
 
     // concatentate results
     tsv_concat_ch = MMSEQS_CREATETSV.out.tsv
-        .map{ meta, tsv -> [groupKey(meta, meta.n_seqs), tsv] }
+        .map{ meta, tsv -> [groupKey(meta.id, meta.n_seqs), [meta,tsv]] }
         .groupTuple()
-        .map{ meta, tsvs -> [meta, meta.id, tsvs]}
+        .map{ k, v ->
+            def (meta, tsvs) = v 
+            [meta, meta.id, tsvs]}
     CONCATENATE(tsv_concat_ch)
 
     emit:
