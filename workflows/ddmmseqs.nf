@@ -6,7 +6,8 @@
 include { samplesheetToList } from 'plugin/nf-schema'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { DIAMOND_MAKEDB_FROM_PIPE } from '../modules/local/diamond_makedb_from_pipe/main'
-include { DIAMOND_BLASTP_TO_CLUSTER } from '../modules/local/diamond_blastp_to_cluster/main'
+include { DIAMOND_BLASTP_TO_MST } from '../modules/local/diamond_blastp_to_mst/main'
+include { MST_TO_CLUSTER } from '../modules/local/mst_to_cluster/main'
 include { MMSEQS_CREATEDB } from '../modules/nf-core/mmseqs/createdb/main'
 include { MMSEQS_LINCLUST } from '../modules/nf-core/mmseqs/linclust/main'
 include { MMSEQS_CREATETSV } from '../modules/nf-core/mmseqs/createtsv/main'
@@ -23,25 +24,62 @@ workflow DDMMSEQS {
 
     // Parse samplesheet and fetch reads
     manifest = Channel.fromList(samplesheetToList(params.samplesheet, "${workflow.projectDir}/assets/schema_input.json"))
-
-    filelist_ch = manifest.map {
-        name, filelist ->
-        [
-            ['id': name],
+    def manifest_idx = 0
+    faa_chunks_ch = manifest.map {
+        collection_name, chunk_name, filelist ->
+        manifest_idx += 1
+        return [
+            ['id': "${collection_name}_${chunk_name}", 'idx': manifest_idx, 
+             'collection_id': collection_name, 'chunk_id': chunk_name],
             file(filelist),
         ]
     }
     
+    // Insert number of chunks in each collection
+    faa_chunks_ch = faa_chunks_ch
+        .map { meta, filelist -> [groupKey(['id': meta.collection_id]), [meta, filelist]]}
+        .groupTuple()
+        .map { k, vs ->
+            def n = vs.size() 
+            return [k, vs.collect{meta, filelist -> [[meta + ['n_chunks': n], filelist]]}] }
+        .transpose()
+        .map { k, v -> 
+            def (meta, filelist) = v 
+            return [meta, filelist]
+        }
+
     // Greedy clustering to generate chunks
-    DIAMOND_MAKEDB_FROM_PIPE(filelist_ch)
+    DIAMOND_MAKEDB_FROM_PIPE(faa_chunks_ch)
     diamond_db_ch = DIAMOND_MAKEDB_FROM_PIPE.out.db
-    DIAMOND_BLASTP_TO_CLUSTER(
-        filelist_ch.join(diamond_db_ch), 
-        true, 
-        params.target_cluster_size,
+
+    diamond_blastp_ch = faa_chunks_ch
+        .combine(diamond_db_ch)
+        .filter{ meta1, _filelist, meta2, _db -> 
+            (meta1.collection_id==meta2.collection_id) && (meta1.idx<=meta2.idx)
+        }
+        .map{ meta1, filelist, meta2, db -> 
+            def meta = ['id': "${meta1.collection_id}_${meta1.chunk_id}_${meta2.chunk_id}", 
+                        'collection_id': meta1.collection_id]
+            return [meta, filelist, db] 
+        } 
+
+    DIAMOND_BLASTP_TO_MST(
+        diamond_blastp_ch,
+        false, 
     )
+    cluster_ch = DIAMOND_BLASTP_TO_MST.out.nodes
+        .join( DIAMOND_BLASTP_TO_MST.out.linkage )
+        .join( diamond_blastp_ch.map { meta, filelist, _db -> [meta, filelist] } )
+        .map { meta, nodes, linkage, filelist -> [groupKey(['id': meta.collection_id], meta.n_chunks), [nodes, linkage, filelist]] }
+        .groupTuple()
+        .map { meta, vs -> 
+            def (nodes, linkages, filelists) = vs.transpose()
+            return [meta, [nodes, linkages].transpose(), filelists]
+        }
+    MST_TO_CLUSTER(cluster_ch, params.target_cluster_size)
+
     def idx = 0
-    seq_chunks_ch = DIAMOND_BLASTP_TO_CLUSTER.out.cluster_seqs
+    seq_chunks_ch = MST_TO_CLUSTER.out.cluster_seqs
         .map { meta, seqs -> 
             [meta + ['n_seqs': seqs.size()], seqs] 
         }
@@ -75,6 +113,8 @@ workflow DDMMSEQS {
         .groupTuple()
         .map { meta, tsvs -> [meta, meta.id, tsvs] }
     CONCATENATE(tsv_concat_ch)
+
+    // output representative sequences?
 
     emit:
     clusters = CONCATENATE.out.concatenated_file

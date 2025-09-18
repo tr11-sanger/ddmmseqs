@@ -1,4 +1,4 @@
-process DIAMOND_BLASTP_TO_CLUSTER {
+process DIAMOND_BLASTP_TO_MST {
     tag "${meta.id}"
     label 'process_high'
 
@@ -10,13 +10,10 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     input:
     tuple val(meta), path(filelist), path(db)
     val save_paf
-    val target_cluster_size
 
     output:
     tuple val(meta), path('*_nodes.{tsv,tsv.gz}'), emit: nodes
     tuple val(meta), path('*_linkage.{tsv,tsv.gz}'), emit: linkage
-    tuple val(meta), path('*_clusters.{tsv,tsv.gz}'), emit: clusters
-    tuple val(meta), path('*_cluster_seqs/*.{faa,faa.gz}'), emit: cluster_seqs
     tuple val(meta), path('*.{paf,paf.gz}'), optional: true, emit: paf
     path "versions.yml", emit: versions
 
@@ -48,13 +45,9 @@ process DIAMOND_BLASTP_TO_CLUSTER {
         --db ${db} \\
         --outfmt ${outfmt} ${columns} \\
         ${args} \\
-    ${tee_cmd} | python ${moduleDir}/bin/greedy_cluster.py \\
-        --filelist ${filelist} \\
+    ${tee_cmd} | python ${moduleDir}/bin/diamond_blastp_to_mst.py \\
         --out_nodes ${prefix}_nodes.tsv.gz \\
         --out_linkage ${prefix}_linkage.tsv.gz \\
-        --out_clusters ${prefix}_clusters.tsv.gz \\
-        --out_cluster_seqs_dir ${prefix}_cluster_seqs \\
-        --target_cluster_size ${target_cluster_size} \\
         ${args2}
 
     cat <<-END_VERSIONS > versions.yml
@@ -69,9 +62,6 @@ process DIAMOND_BLASTP_TO_CLUSTER {
     """
     touch ${prefix}_nodes.txt.gz
     touch ${prefix}_linkage.tsv.gz
-    touch ${prefix}_clusters.tsv.gz
-    mkdir ${prefix}_cluster_seqs
-    touch ${prefix}_cluster_seqs/1.faa.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
