@@ -67,7 +67,7 @@ with open(args.linkagelists, 'rt') as linkagelist_f, gzip.open(args.out_nodes, '
         with gzip.open(linkage_fp, 'rt') as linkage_f:
             for linkage_l in linkage_f:
                 line_i += 1
-                if line_i % 1_000_000:
+                if line_i % 1_000_000 == 0:
                     print(f"{datetime.datetime.now()}\t{line_i:,} lines read")
                 node1, node2 = [rev_node_index[int(v.strip())] for v in linkage_l.split()]
                 node1_index, node2_index = master_node_index[node1], master_node_index[node2]
@@ -131,8 +131,10 @@ for k,v in node2group.items():
     group2nodes[v].add(k)
 
 os.makedirs(args.out_cluster_seqs_dir, exist_ok=True)
-cluster_files = {k: gzip.open(f"{args.out_cluster_seqs_dir}/{k}.faa.gz", 'wt')
+cluster_fps = {k: "{args.out_cluster_seqs_dir}/{k}.faa.gz"
                  for k,_ in group2nodes.items()}
+cluster_file_buffers = {k: [] for k,_ in group2nodes.items()}
+buffer_limit = 10_000
 
 seq_i = 0
 with open(args.filelists, 'rt') as f_lists:
@@ -146,14 +148,20 @@ with open(args.filelists, 'rt') as f_lists:
                 with file_opener(fp, 'rt') as f_faa:
                     for header, seq in parse_faa(l.strip() for l in f_faa.readlines()):
                         seq_i += 1
-                        if seq_i % 1_000_000:
+                        if seq_i % 1_000_000 == 0:
                             print(f"{datetime.datetime.now()}\t{seq_i:,} seqs written")
                         node_idx = master_node_index[header]
                         cluster_idx = node2group[node_idx]
-                        cluster_files[cluster_idx].write(f">{header}\n{seq}\n\n")
+                        cluster_file_buffers[cluster_idx].append(f">{header}\n{seq}\n\n")
+                        if len(cluster_file_buffers[cluster_idx])>buffer_limit:
+                            with gzip.open(cluster_fps[cluster_idx], 'wt') as f_out:
+                                for l in cluster_file_buffers[cluster_idx]:
+                                    f_out.write(l)
+                            cluster_file_buffers[cluster_idx] = []
 
-for k,f in cluster_files.items():
-    f.close()
-
-
-            
+for cluster_idx,lines in cluster_file_buffers.items():
+    if len(lines)==0:
+        continue
+    with gzip.open(cluster_fps[cluster_idx], 'wt') as f_out:
+        for l in lines:
+            f_out.write(l)
