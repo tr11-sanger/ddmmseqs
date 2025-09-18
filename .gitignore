@@ -1,0 +1,4 @@
+conda_cache/
+singularity_cache/
+.vscode/
+.nextflow/
