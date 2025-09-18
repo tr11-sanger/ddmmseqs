@@ -7,9 +7,14 @@
     "items": {
         "type": "object",
         "properties": {
-            "name": {
+            "collection_name": {
                 "type": "string",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "errorMessage": "Collection name must be provided and cannot contain spaces",
+                "minLength": 1
+            },
+            "chunk_name": {
+                "type": "string",
+                "errorMessage": "Chunk name must be provided and cannot contain spaces",
                 "minLength": 1
             },
             "filelist": {
@@ -17,6 +22,6 @@
                 "errorMessage": "Path for file containing newline-seperated list of faa files must be provided."
             }
         },
-        "required": ["name", "filelist"]
+        "required": ["collection_name", "chunk_name", "filelist"]
     }
 }
