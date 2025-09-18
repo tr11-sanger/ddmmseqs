@@ -40,15 +40,15 @@ workflow DDMMSEQS {
         true, 
         params.target_cluster_size,
     )
+    def idx = 0
     seq_chunks_ch = DIAMOND_BLASTP_TO_CLUSTER.out.cluster_seqs
         .map{ meta, seqs -> 
             [meta + ['n_seqs': seqs.size()], seqs] 
         }
         .transpose()
-    seq_chunks_ch = seq_chunks_ch
-        .mix(channel.of(1..(int)(seq_chunks_ch.count().first())))
         .map{
-            meta, seq, idx ->
+            meta, seq ->
+            idx += 1
             [meta + ['idx': idx], seq]
         }
 
