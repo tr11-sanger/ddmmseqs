@@ -46,7 +46,7 @@ workflow DDMMSEQS {
         }
         .transpose()
     seq_chunks_ch = seq_chunks_ch
-        .mix(channel.of(1..seq_chunks_ch.count()))
+        .mix(channel.of(1..(int)(seq_chunks_ch.count().first())))
         .map{
             meta, seq, idx ->
             [meta + ['idx': idx], seq]
