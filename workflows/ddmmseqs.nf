@@ -37,7 +37,7 @@ workflow DDMMSEQS {
     
     // Insert number of chunks in each collection
     faa_chunks_ch = faa_chunks_ch
-        .map { meta, filelist -> [groupKey(['id': meta.collection_id]), [meta, filelist]]}
+        .map { meta, filelist -> [['id': meta.collection_id], [meta, filelist]]}
         .groupTuple()
         .map { k, vs ->
             def n = vs.size() 
