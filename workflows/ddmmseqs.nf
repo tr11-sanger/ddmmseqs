@@ -70,8 +70,7 @@ workflow DDMMSEQS {
     // concatentate results
     tsv_concat_ch = MMSEQS_CREATETSV.out.tsv
         .map { meta, tsv -> 
-            meta.remove('idx')
-            [groupKey(meta, meta.n_seqs), tsv] 
+            [groupKey(['id': meta.id], meta.n_seqs), tsv] 
         }
         .groupTuple()
         .map { meta, tsvs -> [meta, meta.id, tsvs] }
