@@ -61,8 +61,14 @@ workflow DDMMSEQS {
         .map{ meta1, filelist, meta2, db -> 
             def meta = ['id': "${meta1.collection_id}_${meta1.chunk_id}_${meta2.chunk_id}", 
                         'collection_id': meta1.collection_id, 'n_chunks': meta1.n_chunks]
-            return [meta, filelist, db] 
+            return [['id': meta.collection_id], [meta, filelist, db]] 
         } 
+        .groupTuple()
+        .map { k, vs ->
+            def n = vs.size() 
+            return [k, vs.collect{meta, filelist, db -> [meta + ['n_perm': n], filelist, db]}] }
+        .transpose()
+        .map { k, v -> v }
     diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
 
     DIAMOND_BLASTP_TO_MST(
@@ -72,7 +78,7 @@ workflow DDMMSEQS {
     cluster_ch = DIAMOND_BLASTP_TO_MST.out.nodes
         .join( DIAMOND_BLASTP_TO_MST.out.linkage )
         .join( diamond_blastp_ch.map { meta, filelist, _db -> [meta, filelist] } )
-        .map { meta, nodes, linkage, filelist -> [groupKey(['id': meta.collection_id], meta.n_chunks), [nodes, linkage, filelist]] }
+        .map { meta, nodes, linkage, filelist -> [groupKey(['id': meta.collection_id], meta.n_perm), [nodes, linkage, filelist]] }
         .groupTuple()
         .map { meta, vs -> 
             def (nodes, linkages, filelists) = vs.transpose()

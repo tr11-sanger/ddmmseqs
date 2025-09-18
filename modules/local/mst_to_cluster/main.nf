@@ -8,7 +8,7 @@ process MST_TO_CLUSTER {
     //     : 'biocontainers/diamond:2.1.12--hdb4b4cc_1'}"
 
     input:
-    tuple val(meta), path(filelists), path(node_linkage_lists)
+    tuple val(meta), val(node_linkage_lists), val(filelists)
     val target_cluster_size
 
     output:
@@ -24,10 +24,22 @@ process MST_TO_CLUSTER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
+    def node_linkage_fp = "node_linkage.txt"
+    def node_linkage_echo = node_linkage_lists.collect{ n, l -> "echo ${n}\t${l} >> ${node_linkage_fp}" }.join("\n")
+
+    def filelists_fp = "filelists.txt"
+    def filelists_echo = filelists.collect{ v -> "echo ${v} >> ${filelists_fp}" }.join("\n")
+
     """
+    :> ${node_linkage_fp}
+    ${node_linkage_echo}
+
+    :> ${filelists_fp}
+    ${filelists_echo}
+
     python ${moduleDir}/bin/mst_to_cluster.py \\
-        --linkagelists ${node_linkage_lists} \\
-        --filelists ${filelists} \\
+        --linkagelists ${node_linkage_fp} \\
+        --filelists ${filelists_fp} \\
         --out_nodes ${prefix}_nodes.tsv.gz \\
         --out_clusters ${prefix}_clusters.tsv.gz \\
         --out_cluster_seqs_dir ${prefix}_cluster_seqs \\
