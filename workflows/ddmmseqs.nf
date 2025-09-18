@@ -60,7 +60,7 @@ workflow DDMMSEQS {
         }
         .map{ meta1, filelist, meta2, db -> 
             def meta = ['id': "${meta1.collection_id}_${meta1.chunk_id}_${meta2.chunk_id}", 
-                        'collection_id': meta1.collection_id]
+                        'collection_id': meta1.collection_id, 'n_chunks': meta1.n_chunks]
             return [meta, filelist, db] 
         } 
     diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
