@@ -2,7 +2,7 @@ process MMSEQS_LINCLUST {
     tag "$meta.id"
     label 'process_high'
 
-    conda "${moduleDir}/environment.yml"
+    // conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/mmseqs2:17.b804f--hd6d6fdc_1':
         'biocontainers/mmseqs2:17.b804f--hd6d6fdc_1' }"
@@ -20,7 +20,7 @@ process MMSEQS_LINCLUST {
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: "*.dbtype"
-    prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}_clustered"
     if ("$db_input" == "${prefix}") error "Input and output names of databases are the same, set prefix in module configuration to disambiguate!"
 
     """
