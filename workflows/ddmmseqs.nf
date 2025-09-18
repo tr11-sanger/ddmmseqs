@@ -69,10 +69,9 @@ workflow DDMMSEQS {
 
     // concatentate results
     tsv_concat_ch = MMSEQS_CREATETSV.out.tsv
-        .map{ meta, tsv -> [groupKey(meta.id, meta.n_seqs), [meta,tsv]] }
+        .map{ meta, tsv -> [groupKey(meta.remove('idx'), meta.n_seqs), tsv] }
         .groupTuple()
-        .map{ k, v ->
-            def (meta, tsvs) = v 
+        .map{ meta, tsvs ->
             [meta, meta.id, tsvs]}
     CONCATENATE(tsv_concat_ch)
 
