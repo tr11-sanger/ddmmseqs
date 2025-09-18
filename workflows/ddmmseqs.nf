@@ -47,7 +47,8 @@ workflow DDMMSEQS {
             def (meta, filelist) = v 
             return [meta, filelist]
         }
-
+    faa_chunks_ch.view{ "faa_chunks_ch - ${it}" }
+    
     // Greedy clustering to generate chunks
     DIAMOND_MAKEDB_FROM_PIPE(faa_chunks_ch)
     diamond_db_ch = DIAMOND_MAKEDB_FROM_PIPE.out.db
@@ -62,6 +63,7 @@ workflow DDMMSEQS {
                         'collection_id': meta1.collection_id]
             return [meta, filelist, db] 
         } 
+    diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
 
     DIAMOND_BLASTP_TO_MST(
         diamond_blastp_ch,
@@ -76,6 +78,7 @@ workflow DDMMSEQS {
             def (nodes, linkages, filelists) = vs.transpose()
             return [meta, [nodes, linkages].transpose(), filelists]
         }
+    cluster_ch.view{ "cluster_ch - ${it}" }
     MST_TO_CLUSTER(cluster_ch, params.target_cluster_size)
 
     def idx = 0
@@ -89,6 +92,7 @@ workflow DDMMSEQS {
             idx += 1
             [meta + ['idx': idx], seq]
         }
+    seq_chunks_ch.view{ "seq_chunks_ch - ${it}" }
 
     // clustering of chunks
     MMSEQS_CREATEDB(seq_chunks_ch)
@@ -99,6 +103,7 @@ workflow DDMMSEQS {
             db: [meta, db]
             db_cluster: [meta, db_cluster]
         }
+    joined_db_clustered_db_ch.view{ "joined_db_clustered_db_ch - ${it}" }
     MMSEQS_CREATETSV(
         joined_db_clustered_db_ch.db_cluster,
         joined_db_clustered_db_ch.db,
@@ -112,6 +117,7 @@ workflow DDMMSEQS {
         }
         .groupTuple()
         .map { meta, tsvs -> [meta, meta.id, tsvs] }
+    tsv_concat_ch.view{ "tsv_concat_ch - ${it}" }
     CONCATENATE(tsv_concat_ch)
 
     // output representative sequences?
