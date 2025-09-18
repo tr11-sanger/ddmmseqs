@@ -80,7 +80,7 @@ workflow DDMMSEQS {
         .map { meta, nodes, linkage  -> [groupKey(['id': meta.collection_id], meta.n_perm), [nodes, linkage]] }
         .groupTuple()
         .map { meta, vs -> 
-            return [['id': meta.collection_id], vs]
+            return [meta, vs]
         }
         .join( 
             faa_chunks_ch
