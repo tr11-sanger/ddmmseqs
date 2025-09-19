@@ -47,7 +47,7 @@ workflow DDMMSEQS {
             def (meta, filelist) = v 
             return [meta, filelist]
         }
-    faa_chunks_ch.view{ "faa_chunks_ch - ${it}" }
+    // faa_chunks_ch.view{ "faa_chunks_ch - ${it}" }
     
     // Greedy clustering to generate chunks
     DIAMOND_MAKEDB_FROM_PIPE(faa_chunks_ch)
@@ -69,7 +69,7 @@ workflow DDMMSEQS {
             return [k, vs.collect{meta, filelist, db -> [meta + ['n_perm': n], filelist, db]}] }
         .transpose()
         .map { _k, v -> v }
-    diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
+    // diamond_blastp_ch.view{ "diamond_blastp_ch - ${it}" }
 
     DIAMOND_BLASTP_TO_MST(
         diamond_blastp_ch,
@@ -89,13 +89,14 @@ workflow DDMMSEQS {
                 }
                 .groupTuple() 
         )
-    cluster_ch.view{ "cluster_ch - ${it}" }
+    // cluster_ch.view{ "cluster_ch - ${it}" }
     MST_TO_CLUSTER(cluster_ch, params.target_cluster_size)
 
     def idx = 0
     seq_chunks_ch = MST_TO_CLUSTER.out.cluster_seqs
         .map { meta, seqs -> 
-            [meta + ['n_seqs': seqs.size()], seqs] 
+            def seqs_ = seqs instanceof Collection ? seqs : [seqs]
+            [meta + ['n_seqs': seqs_.size()], seqs_] 
         }
         .transpose()
         .map{
@@ -103,7 +104,7 @@ workflow DDMMSEQS {
             idx += 1
             [meta + ['idx': idx], seq]
         }
-    seq_chunks_ch.view{ "seq_chunks_ch - ${it}" }
+    // seq_chunks_ch.view{ "seq_chunks_ch - ${it}" }
 
     // clustering of chunks
     MMSEQS_CREATEDB(seq_chunks_ch)
@@ -114,7 +115,7 @@ workflow DDMMSEQS {
             db: [meta, db]
             db_cluster: [meta, db_cluster]
         }
-    joined_db_clustered_db_ch.db_cluster.view{ "joined_db_clustered_db_ch.db_cluster - ${it}" }
+    // joined_db_clustered_db_ch.db_cluster.view{ "joined_db_clustered_db_ch.db_cluster - ${it}" }
     MMSEQS_CREATETSV(
         joined_db_clustered_db_ch.db_cluster,
         joined_db_clustered_db_ch.db,
@@ -128,7 +129,7 @@ workflow DDMMSEQS {
         }
         .groupTuple()
         .map { meta, tsvs -> [meta, meta.id, tsvs] }
-    tsv_concat_ch.view{ "tsv_concat_ch - ${it}" }
+    // tsv_concat_ch.view{ "tsv_concat_ch - ${it}" }
     CONCATENATE(tsv_concat_ch)
 
     // output representative sequences?
