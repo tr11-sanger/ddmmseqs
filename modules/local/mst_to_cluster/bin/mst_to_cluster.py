@@ -129,9 +129,11 @@ node2group = {k:cluster2group[v] for k,v in node2cluster.items()}
 group2nodes = defaultdict(set)
 for k,v in node2group.items():
     group2nodes[v].add(k)
+group_sizes = {k:len(vs) for k,vs in group2nodes.items()}
+smallest_group_idx = sorted(group_sizes.items(), key=lambda x:x[1])[0][0]
 
 os.makedirs(args.out_cluster_seqs_dir, exist_ok=True)
-cluster_fps = {k: "{args.out_cluster_seqs_dir}/{k}.faa.gz"
+cluster_fps = {k: f"{args.out_cluster_seqs_dir}/{k}.faa.gz"
                  for k,_ in group2nodes.items()}
 cluster_file_buffers = {k: [] for k,_ in group2nodes.items()}
 buffer_limit = 10_000
@@ -150,8 +152,12 @@ with open(args.filelists, 'rt') as f_lists:
                         seq_i += 1
                         if seq_i % 1_000_000 == 0:
                             print(f"{datetime.datetime.now()}\t{seq_i:,} seqs written")
-                        node_idx = master_node_index[header]
-                        cluster_idx = node2group[node_idx]
+                        if header in master_node_index:
+                            node_idx = master_node_index[header]
+                            cluster_idx = node2group[node_idx]
+                        else:
+                            cluster_idx = smallest_group_idx
+
                         cluster_file_buffers[cluster_idx].append(f">{header}\n{seq}\n\n")
                         if len(cluster_file_buffers[cluster_idx])>buffer_limit:
                             with gzip.open(cluster_fps[cluster_idx], 'wt') as f_out:
