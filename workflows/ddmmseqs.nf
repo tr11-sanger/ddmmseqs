@@ -89,7 +89,7 @@ workflow DDMMSEQS {
                 }
                 .groupTuple() 
         )
-    cluster_ch.view{ "cluster_ch - ${it}" }
+    // cluster_ch.view{ "cluster_ch - ${it}" }
     MST_TO_CLUSTER(cluster_ch, params.target_cluster_size)
 
     def idx = 0

@@ -154,20 +154,18 @@ with open(args.filelists, 'rt') as f_lists:
                             print(f"{datetime.datetime.now()}\t{seq_i:,} seqs written")
                         if header in master_node_index:
                             node_idx = master_node_index[header]
-                            cluster_idx = node2group[node_idx]
+                            group_idx = node2group[node_idx]
                         else:
-                            cluster_idx = smallest_group_idx
+                            group_idx = smallest_group_idx
 
-                        cluster_file_buffers[cluster_idx].append(f">{header}\n{seq}\n\n")
-                        if len(cluster_file_buffers[cluster_idx])>buffer_limit:
-                            with gzip.open(cluster_fps[cluster_idx], 'wt') as f_out:
-                                for l in cluster_file_buffers[cluster_idx]:
-                                    f_out.write(l)
-                            cluster_file_buffers[cluster_idx] = []
+                        cluster_file_buffers[group_idx].append(f">{header}\n{seq}\n\n")
+                        if len(cluster_file_buffers[group_idx])>buffer_limit:
+                            with gzip.open(cluster_fps[group_idx], 'at') as f_out:
+                                f_out.writelines(cluster_file_buffers[group_idx])
+                            cluster_file_buffers[group_idx] = []
 
-for cluster_idx,lines in cluster_file_buffers.items():
+for cluster_idx, lines in cluster_file_buffers.items():
     if len(lines)==0:
         continue
-    with gzip.open(cluster_fps[cluster_idx], 'wt') as f_out:
-        for l in lines:
-            f_out.write(l)
+    with gzip.open(cluster_fps[cluster_idx], 'at') as f_out:
+        f_out.writelines(lines)
