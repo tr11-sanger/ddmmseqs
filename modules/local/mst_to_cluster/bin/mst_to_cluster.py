@@ -64,12 +64,13 @@ with open(args.linkagelists, 'rt') as linkagelist_f, gzip.open(args.out_nodes, '
                 cluster2nodes[cluster_idx] = {master_node_index[k]}
                 next_cluster_idx += 1
 
+        rev_master_node_index = {v:k for k,v in master_node_index.items()}
         with gzip.open(linkage_fp, 'rt') as linkage_f:
             for linkage_l in linkage_f:
                 line_i += 1
                 if line_i % 1_000_000 == 0:
                     print(f"{datetime.datetime.now()}\t{line_i:,} lines read")
-                node1, node2 = [rev_node_index[int(v.strip())] for v in linkage_l.split()]
+                node1, node2 = [rev_master_node_index[int(v.strip())] for v in linkage_l.split()]
                 node1_index, node2_index = master_node_index[node1], master_node_index[node2]
                 
                 # create/merge clusters
